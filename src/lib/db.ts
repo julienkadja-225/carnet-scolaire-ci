@@ -29,8 +29,29 @@ function createConnection() {
 
 const globalForDb = globalThis as unknown as { __pgSql?: ReturnType<typeof postgres> };
 
-const sql = globalForDb.__pgSql ?? createConnection();
-if (process.env.NODE_ENV !== "production") globalForDb.__pgSql = sql;
+function getClient(): ReturnType<typeof postgres> {
+  if (!globalForDb.__pgSql) {
+    globalForDb.__pgSql = createConnection();
+  }
+  return globalForDb.__pgSql;
+}
+
+// La connexion est créée paresseusement, au premier usage réel, et non au chargement du
+// module : Next.js évalue ce fichier pendant `next build` même pour des pages qui n'accèdent
+// jamais à la base (ex. /_not-found), et se connecter trop tôt ferait échouer le build si
+// DATABASE_URL n'est pas encore visible à cette étape.
+const sql: ReturnType<typeof postgres> = new Proxy(
+  (() => {}) as unknown as ReturnType<typeof postgres>,
+  {
+    apply(_target, _thisArg, args) {
+      const client = getClient() as unknown as (...a: unknown[]) => unknown;
+      return client(...args);
+    },
+    get(_target, prop, receiver) {
+      return Reflect.get(getClient(), prop, receiver);
+    },
+  }
+);
 
 function nowIso(): string {
   return new Date().toISOString();
