@@ -93,6 +93,9 @@ export default function Navbar({ user }: { user: NavbarUser | null }) {
               <Link href="/admin/demandes" className="rounded-md px-3 py-2 font-medium hover:bg-black/5">
                 Demandes
               </Link>
+              <Link href="/admin/eleves" className="rounded-md px-3 py-2 font-medium hover:bg-black/5">
+                Élèves
+              </Link>
               <Link href="/admin/utilisateurs" className="rounded-md px-3 py-2 font-medium hover:bg-black/5">
                 Utilisateurs
               </Link>
